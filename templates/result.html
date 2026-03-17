@@ -22,7 +22,7 @@
             <a href="/" class="btn btn-outline-primary px-4">New Search</a>
         </div>
 
-        <!-- Results Table (FR14) -->
+        <!-- Results Table -->
         <div class="card border-0 shadow-lg mb-4">
             <div class="card-body p-0">
                 <table class="table table-hover mb-0 result-table">
@@ -30,6 +30,7 @@
                         <tr class="table-light">
                             <th class="ps-4">Rank</th>
                             <th>Topic</th>
+                            <th>Category</th>
                             <th>Score</th>
                             <th>Stars</th>
                             <th class="pe-4">Reason</th>
@@ -46,6 +47,9 @@
                                 {% if r.is_rising %}
                                 <span class="badge bg-success ms-1">Rising</span>
                                 {% endif %}
+                            </td>
+                            <td class="align-middle">
+                                <span class="badge rounded-pill bg-primary bg-opacity-75">{{ r.subcategory }}</span>
                             </td>
                             <td class="align-middle">
                                 <span class="fw-bold">{{ r.final_score }}</span>
@@ -66,7 +70,7 @@
             </div>
         </div>
 
-        <!-- Charts Row (FR13) -->
+        <!-- Charts Row -->
         <div class="row g-4 mb-4">
             <!-- Bar Chart: Top Trends -->
             <div class="col-lg-7">
@@ -78,12 +82,12 @@
                 </div>
             </div>
 
-            <!-- Doughnut Chart: Cluster Distribution -->
+            <!-- Doughnut Chart: Sub-category Distribution -->
             <div class="col-lg-5">
                 <div class="card border-0 shadow-lg h-100">
                     <div class="card-body">
-                        <h5 class="card-title mb-3">Topic Clusters</h5>
-                        <canvas id="clusterChart"></canvas>
+                        <h5 class="card-title mb-3">Sub-category Distribution</h5>
+                        <canvas id="subcatChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -98,7 +102,7 @@
     <script>
         const labels = {{ results | map(attribute='topic') | list | tojson }};
         const scores = {{ results | map(attribute='final_score') | list | tojson }};
-        const clusters = {{ results | map(attribute='cluster') | list | tojson }};
+        const subcategories = {{ results | map(attribute='subcategory') | list | tojson }};
 
         const PALETTE = [
             'rgba(102, 126, 234, 0.85)',
@@ -109,6 +113,8 @@
             'rgba(253, 160, 133, 0.85)',
             'rgba(76, 209, 55, 0.85)',
             'rgba(232, 67, 147, 0.85)',
+            'rgba(255, 159, 67, 0.85)',
+            'rgba(104, 109, 224, 0.85)',
         ];
 
         const barColors = scores.map((_, i) => PALETTE[i % PALETTE.length]);
@@ -136,19 +142,19 @@
             }
         });
 
-        /* ---- Cluster Doughnut Chart ---- */
-        const clusterCounts = {};
-        clusters.forEach(c => { clusterCounts[c] = (clusterCounts[c] || 0) + 1; });
-        const clusterLabels = Object.keys(clusterCounts).map(c => 'Cluster ' + (parseInt(c) + 1));
-        const clusterData = Object.values(clusterCounts);
+        /* ---- Sub-category Doughnut Chart ---- */
+        const subcatCounts = {};
+        subcategories.forEach(s => { subcatCounts[s] = (subcatCounts[s] || 0) + 1; });
+        const subcatLabels = Object.keys(subcatCounts);
+        const subcatData = Object.values(subcatCounts);
 
-        new Chart(document.getElementById('clusterChart'), {
+        new Chart(document.getElementById('subcatChart'), {
             type: 'doughnut',
             data: {
-                labels: clusterLabels,
+                labels: subcatLabels,
                 datasets: [{
-                    data: clusterData,
-                    backgroundColor: PALETTE.slice(0, clusterLabels.length),
+                    data: subcatData,
+                    backgroundColor: PALETTE.slice(0, subcatLabels.length),
                 }]
             },
             options: {

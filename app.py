@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request
 from modules.data_collector import fetch_multi_seed
 from modules.trend_engine import aggregate_topics, calculate_final_scores
-from modules.news_validation import validate_topics
+from modules.topic_validation import validate_topics
 from utils.config import DEFAULT_CATEGORY, DEFAULT_DATE_RANGE, CATEGORY_SEEDS
 
 app = Flask(__name__)
@@ -25,10 +25,10 @@ def search():
 
     aggregated = aggregate_topics(all_raw, cat_name, seeds)
 
-    topic_names = list(aggregated.keys())
-    news_data = validate_topics(topic_names[:15])
+    topic_names = list(aggregated.keys())[:15]
+    validation_data = validate_topics(topic_names, cat_name)
 
-    results = calculate_final_scores(aggregated, news_data)
+    results = calculate_final_scores(aggregated, validation_data)
 
     try:
         from modules.clustering import cluster_topics

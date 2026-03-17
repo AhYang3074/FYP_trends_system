@@ -7,7 +7,6 @@ from utils.config import (
     TFIDF_SIMILARITY_THRESHOLD,
     RISING_SCORE_DEFAULT,
     RELEVANCE_FLOOR,
-    ENTITY_PENALTY,
 )
 
 
@@ -20,7 +19,7 @@ def aggregate_topics(all_raw_data, category_name, seeds):
         "sources": set(),
         "is_rising": False,
         "keyword_score": 0.0,
-        "is_entity": False,
+        "subcategory": "General",
     })
 
     for item in all_raw_data:
@@ -49,11 +48,13 @@ def aggregate_topics(all_raw_data, category_name, seeds):
 
 
 def _ingest(aggregated, raw_name, score, seed_keyword, category_name):
-    """Run L1 → L3, then store the topic. Returns the entry or None."""
+    """Run L1 → L1.5 → L3, then store the topic. Returns the entry or None."""
     clean_name = TopicProcessor.clean(raw_name)
     if not clean_name:
         return None
     final_name = TopicProcessor.normalize(clean_name)
+    if TopicProcessor.is_noise(final_name):
+        return None
     if TopicProcessor.is_excluded(final_name, category_name):
         return None
 
@@ -62,8 +63,9 @@ def _ingest(aggregated, raw_name, score, seed_keyword, category_name):
     kw_score = TopicProcessor.keyword_match_score(final_name, category_name)
     entry["keyword_score"] = max(entry["keyword_score"], kw_score)
 
-    if TopicProcessor.is_entity(final_name):
-        entry["is_entity"] = True
+    subcat = TopicProcessor.infer_subcategory(final_name, category_name)
+    if entry["subcategory"] == "General" and subcat != "General":
+        entry["subcategory"] = subcat
 
     if score is not None:
         entry["scores"].append(score)
@@ -74,9 +76,6 @@ def _ingest(aggregated, raw_name, score, seed_keyword, category_name):
 
 # ── L4: TF-IDF against full domain vocabulary ──────────────────────────────
 def _attach_tfidf_scores(aggregated, category_name, seeds):
-    """Cosine similarity of each topic to every core + related keyword + seed.
-    Uses the full domain vocabulary so semantic neighbours are caught even
-    when they don't appear in the keyword lists."""
     topic_names = list(aggregated.keys())
     if not topic_names:
         return
@@ -105,29 +104,19 @@ def _attach_tfidf_scores(aggregated, category_name, seeds):
 
 
 # ── Relevance formula ───────────────────────────────────────────────────────
-def _compute_relevance(keyword_score, tfidf_sim, is_entity):
-    """Combine keyword match + TF-IDF into a single 0‥1 relevance multiplier.
-    Core match   → 1.0
-    Related match → 0.85
-    No keyword match → scaled TF-IDF (capped at 0.7, floor at RELEVANCE_FLOOR)
-    Entity → heavy penalty on top.
-    """
+def _compute_relevance(keyword_score, tfidf_sim):
     if keyword_score >= 1.0:
-        rel = 1.0
-    elif keyword_score >= 0.8:
-        rel = 0.85
-    else:
-        rel = min(tfidf_sim * 1.5, 0.7)
-        rel = max(rel, RELEVANCE_FLOOR)
+        return 1.0
+    if keyword_score >= 0.8:
+        return 0.85
 
-    if is_entity:
-        rel *= ENTITY_PENALTY
-
-    return rel
+    if tfidf_sim >= TFIDF_SIMILARITY_THRESHOLD:
+        return min(tfidf_sim * 1.5, 0.7)
+    return RELEVANCE_FLOOR
 
 
 # ── Final scoring ───────────────────────────────────────────────────────────
-def calculate_final_scores(aggregated, news_data=None):
+def calculate_final_scores(aggregated, validation_data=None):
     results = []
 
     for topic, data in aggregated.items():
@@ -138,39 +127,41 @@ def calculate_final_scores(aggregated, news_data=None):
         occurrence = len(scores)
         avg_score = sum(scores) / occurrence
 
-        # Multi-seed occurrence boost (stronger reward for cross-seed presence)
         occurrence_weight = min(1 + (occurrence - 1) * 0.25, 2.5)
 
-        # Continuous relevance multiplier (keyword + TF-IDF + entity)
         relevance = _compute_relevance(
             data["keyword_score"],
             data.get("tfidf_sim", 0.0),
-            data["is_entity"],
         )
 
         final_score = avg_score * occurrence_weight * relevance
 
-        # News bonus
-        news_count = 0
-        if news_data and topic in news_data:
-            news_count = news_data[topic]
-            final_score += min(news_count * 0.5, 10)
+        validation_bonus = 0.0
+        validation_sources = {}
+        if validation_data and topic in validation_data:
+            vd = validation_data[topic]
+            validation_bonus = vd.get("bonus", 0.0)
+            validation_sources = vd.get("sources", {})
+            final_score += validation_bonus
 
         final_score = max(min(round(final_score), 100), 1)
 
         stars = _score_to_stars(final_score)
         reason = _generate_explanation(
-            final_score, occurrence, data["is_rising"], news_count,
+            final_score, occurrence, data["is_rising"],
+            validation_bonus, validation_sources,
         )
 
         results.append({
             "topic": topic,
+            "subcategory": data["subcategory"],
             "avg_score": round(avg_score, 1),
             "occurrence": occurrence,
             "final_score": final_score,
             "stars": stars,
             "reason": reason,
             "is_rising": data["is_rising"],
+            "validation": validation_sources,
         })
 
     results.sort(key=lambda x: x["final_score"], reverse=True)
@@ -194,7 +185,7 @@ def _score_to_stars(score):
     return 1
 
 
-def _generate_explanation(score, occurrence, is_rising, news_count):
+def _generate_explanation(score, occurrence, is_rising, bonus, sources):
     if score >= 80 and occurrence >= 3:
         base = "Dominant trend with broad search interest"
     elif score >= 80:
@@ -208,9 +199,17 @@ def _generate_explanation(score, occurrence, is_rising, news_count):
     else:
         base = "Increasing public interest"
 
-    if news_count >= 5:
-        base += " with strong news coverage"
-    elif news_count >= 1:
-        base += " with some news coverage"
+    signals = []
+    if sources.get("news", 0) > 0:
+        signals.append("news coverage")
+    if sources.get("github", 0) > 0:
+        signals.append("GitHub")
+    if sources.get("stackexchange", 0) > 0:
+        signals.append("StackOverflow")
+    if sources.get("alphavantage", 0) > 0:
+        signals.append("financial media")
+
+    if signals:
+        base += " — validated by " + ", ".join(signals)
 
     return base
