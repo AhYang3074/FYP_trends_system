@@ -1,4 +1,4 @@
-from utils.config import DOMAIN_KEYWORDS, DOMAIN_EXCLUSIONS
+from utils.config import DOMAIN_KEYWORDS, DOMAIN_EXCLUSIONS, ENTITY_INDICATORS
 
 
 class TopicProcessor:
@@ -23,12 +23,12 @@ class TopicProcessor:
         "saas": "software as a service",
     }
 
+    # --- Layer 1: Basic Cleaning ---
     @staticmethod
     def clean(name):
         """Filter out single-word or generic topics."""
         name = name.lower().strip()
-        tokens = name.split()
-        if len(tokens) < 2:
+        if len(name.split()) < 2:
             return None
         if name in TopicProcessor.GENERIC_WORDS:
             return None
@@ -36,22 +36,29 @@ class TopicProcessor:
 
     @staticmethod
     def normalize(name):
-        """Map abbreviations/synonyms to a canonical form."""
         return TopicProcessor.REPLACEMENTS.get(name, name)
 
+    # --- Layer 2: Keyword match score (continuous) ---
     @staticmethod
-    def is_relevant(name, category_name):
-        """Two-stage relevance check:
-        1. Reject if topic contains any exclusion term.
-        2. Accept only if topic contains at least one domain keyword.
-        """
-        cat = category_name.lower()
+    def keyword_match_score(name, category_name):
+        """Return 1.0 (core match), 0.8 (related match), or 0.0 (no match)."""
+        domain = DOMAIN_KEYWORDS.get(category_name.lower())
+        if not domain:
+            return 1.0
+        if any(k in name for k in domain["core"]):
+            return 1.0
+        if any(k in name for k in domain["related"]):
+            return 0.8
+        return 0.0
 
-        exclusions = DOMAIN_EXCLUSIONS.get(cat, [])
-        if any(ex in name for ex in exclusions):
-            return False
+    # --- Layer 3: Exclusion (hard delete) ---
+    @staticmethod
+    def is_excluded(name, category_name):
+        exclusions = DOMAIN_EXCLUSIONS.get(category_name.lower(), [])
+        return any(ex in name for ex in exclusions)
 
-        keywords = DOMAIN_KEYWORDS.get(cat, [])
-        if not keywords:
-            return True
-        return any(kw in name for kw in keywords)
+    # --- Entity detection ---
+    @staticmethod
+    def is_entity(name):
+        """Detect geographic, institutional, or reference-site entities."""
+        return any(ind in name for ind in ENTITY_INDICATORS)

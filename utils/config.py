@@ -53,80 +53,145 @@ CATEGORY_SEEDS = {
     },
 }
 
-# Compound phrases preferred over single generic words to avoid false positives
+# ---------------------------------------------------------------------------
+# Layer 2: Domain keyword matching  (core → 1.0, related → 0.8, miss → 0.0)
+# ---------------------------------------------------------------------------
 DOMAIN_KEYWORDS = {
-    "technology": [
-        "artificial intelligence", "machine learning", "deep learning",
-        "cyber", "security", "cloud computing", "blockchain", "software",
-        "computing", "tech", "digital", "algorithm", "robot", "automat",
-        "neural", "network", "quantum", "program", "code", "hardware",
-        "chip", "semiconductor", "gpu", "api", "platform", "saas",
-        "devops", "web", "internet", "database", "server", "encryption",
-        "malware", "phishing", "firewall", "virtuali", "container",
-        "microservice", "llm", "chatbot", "generative", "data science",
-        "open source", "cryptograph",
-    ],
-    "finance": [
-        "stock market", "invest", "trading", "banking", "finance",
-        "cryptocurren", "fund", "portfolio", "dividend", "bond",
-        "interest rate", "forex", "wealth", "capital", "asset", "fintech",
-        "payment", "insurance", "credit", "loan", "mortgage", "economy",
-        "inflation", "fiscal", "revenue", "equity", "hedge", "commodity",
-        "valuation", "ipo", "wall street",
-    ],
-    "business": [
-        "startup", "entrepreneur", "e-commerce", "ecommerce", "commerce",
-        "marketing", "supply chain", "brand", "management", "retail",
-        "strategy", "leadership", "innovation", "merger", "acquisition",
-        "franchise", "revenue", "profit", "corporate", "logistics",
-        "consult", "outsourc", "b2b", "b2c", "saas", "crm",
-        "business model", "venture", "partnership", "stakeholder",
-        "workforce", "hiring", "recruitment", "competitive",
-    ],
-    "health": [
-        "health", "medical", "doctor", "patient", "hospital", "disease",
-        "therapy", "mental", "wellness", "nutrition", "diet", "fitness",
-        "pharma", "vaccine", "clinic", "diagnos", "treatment", "medicine",
-        "symptom", "biotech", "genome", "cancer", "virus", "surgery",
-        "cardio", "immun", "epidem", "chronic", "drug", "supplement",
-    ],
-    "science": [
-        "space", "climate", "quantum", "physics", "biology", "chemistry",
-        "energy", "renewable", "solar", "nuclear", "genome", "research",
-        "experiment", "planet", "nasa", "satellite", "carbon", "emission",
-        "evolution", "ecosystem", "telescope", "particle", "molecule",
-        "fossil", "biodiversity", "astro", "neurosci", "geolog",
-    ],
-    "all categories": [],
+    "technology": {
+        "core": [
+            "artificial intelligence", "machine learning", "deep learning",
+            "cybersecurity", "cloud computing", "blockchain",
+        ],
+        "related": [
+            "software", "hardware", "algorithm", "automation",
+            "neural", "network", "chatbot", "api",
+            "database", "server", "programming", "code", "developer",
+            "web", "internet", "platform", "saas", "devops",
+            "gpu", "chip", "semiconductor", "encryption", "malware",
+            "firewall", "virtuali", "container", "microservice",
+            "generative", "open source", "crypto", "robot",
+            "digital", "cyber", "tech", "computing", "quantum",
+            "llm", "data science", "computer security",
+        ],
+    },
+    "finance": {
+        "core": [
+            "stock market", "investment", "trading",
+            "cryptocurrency", "interest rate",
+        ],
+        "related": [
+            "banking", "finance", "portfolio", "asset",
+            "equity", "bond", "fund", "wealth",
+            "forex", "inflation", "economy", "fintech",
+            "dividend", "mortgage", "loan", "credit",
+            "fiscal", "hedge", "commodity", "valuation",
+            "ipo", "wall street", "payment", "insurance",
+        ],
+    },
+    "business": {
+        "core": [
+            "startup", "entrepreneurship", "business strategy",
+            "supply chain", "marketing strategy",
+        ],
+        "related": [
+            "management", "brand", "commerce", "ecommerce",
+            "retail", "logistics", "operation", "corporate",
+            "revenue", "profit", "growth", "venture",
+            "investment", "customer", "market",
+            "franchise", "merger", "acquisition", "stakeholder",
+            "workforce", "hiring", "recruitment", "competitive",
+            "outsourc", "consult", "b2b", "b2c", "crm",
+            "partnership", "innovation", "strategy", "leadership",
+        ],
+    },
+    "health": {
+        "core": [
+            "mental health", "public health", "medical research",
+            "disease treatment",
+        ],
+        "related": [
+            "fitness", "nutrition", "wellness",
+            "hospital", "doctor", "patient",
+            "therapy", "medicine", "vaccine",
+            "pharma", "clinic", "diagnos", "treatment",
+            "symptom", "biotech", "genome", "cancer",
+            "virus", "surgery", "cardio", "immun",
+            "epidem", "chronic", "drug", "supplement",
+            "health", "medical", "diet",
+        ],
+    },
+    "science": {
+        "core": [
+            "quantum physics", "climate change",
+            "space exploration", "biotechnology",
+        ],
+        "related": [
+            "research", "experiment", "energy",
+            "solar", "nuclear", "genome",
+            "biology", "chemistry", "physics",
+            "renewable", "satellite", "carbon", "emission",
+            "evolution", "ecosystem", "telescope", "particle",
+            "molecule", "fossil", "biodiversity", "astro",
+            "neurosci", "geolog", "planet", "nasa",
+        ],
+    },
+    "all categories": {"core": [], "related": []},
 }
 
-# Topics containing any exclusion term are rejected regardless of keyword match
+# ---------------------------------------------------------------------------
+# Layer 3: Hard exclusions — instant delete
+# ---------------------------------------------------------------------------
 DOMAIN_EXCLUSIONS = {
     "technology": [
         "county", "zodiac", "university", "college", "country",
         "religion", "church", "football", "basketball", "soccer",
         "recipe", "cooking", "fashion", "celebrity", "movie",
+        "power supply", "real estate", "weight loss",
+        "prom dress", "white gold", "gold price",
     ],
     "finance": [
         "recipe", "cooking", "football", "basketball", "soccer",
         "movie", "celebrity", "fashion", "power supply", "circuit",
+        "voltage", "university", "college", "zodiac",
+        "prom dress", "white gold",
     ],
     "business": [
         "power supply", "voltage", "watt", "circuit", "electric",
         "recipe", "cooking", "football", "basketball", "soccer",
         "movie", "celebrity", "county", "zodiac", "university",
-        "college", "religion", "church", "fashion",
+        "college", "religion", "church", "fashion", "weight loss",
+        "real estate agent", "prom dress", "white gold",
     ],
     "health": [
         "football", "soccer", "celebrity", "fashion", "movie",
         "county", "zodiac", "power supply", "circuit", "voltage",
+        "stock market", "cryptocurrency",
     ],
     "science": [
         "football", "soccer", "celebrity", "fashion", "movie",
         "county", "zodiac", "recipe", "cooking",
+        "stock market", "cryptocurrency",
     ],
     "all categories": [],
 }
 
-TFIDF_SIMILARITY_THRESHOLD = 0.12
+# ---------------------------------------------------------------------------
+# Entity indicators — geographic / institutional / reference-site noise
+# ---------------------------------------------------------------------------
+ENTITY_INDICATORS = [
+    "united states", "united kingdom", "south korea", "north korea",
+    "saudi arabia", "new zealand", "hong kong", "sri lanka",
+    "costa rica", "puerto rico", "el salvador", "dominican republic",
+    "czech republic", "ivory coast",
+    "province", "prefecture", "district",
+    "wiki", "brilliant math", "imdb",
+]
+
+# ---------------------------------------------------------------------------
+# Scoring parameters
+# ---------------------------------------------------------------------------
+TFIDF_SIMILARITY_THRESHOLD = 0.05
+RELEVANCE_FLOOR = 0.15
+ENTITY_PENALTY = 0.1
+
 RISING_SCORE_DEFAULT = 15
