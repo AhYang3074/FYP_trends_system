@@ -12,13 +12,13 @@ def index():
 @app.route('/search')
 def search():
     query = request.args.get('q')
-    if not query:
-        return "Please enter a keyword"
+    category = request.args.get('category', 18) # 默认 18
+    date = request.args.get('date', 'today 1-m') # 默认一个月
     
-    # 1. 调用 Service 拿数据
-    raw_data = fetch_trends_data(query)
+    # 1. 传参数给 service
+    raw_data = fetch_trends_data(query, category, date)
     
-    # 2. 调用 Processor 处理数据
+    # 2. 处理数据
     processed_list = processor.process_results(raw_data)
     
     # 3. 渲染页面
