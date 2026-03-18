@@ -136,6 +136,9 @@ def calculate_final_scores(aggregated, validation_data=None):
 
         final_score = avg_score * occurrence_weight * relevance
 
+        trend_bonus = TopicProcessor.trend_boost(topic)
+        final_score += trend_bonus
+
         validation_bonus = 0.0
         validation_sources = {}
         if validation_data and topic in validation_data:
@@ -153,7 +156,7 @@ def calculate_final_scores(aggregated, validation_data=None):
         )
 
         results.append({
-            "topic": topic,
+            "topic": TopicProcessor.display_name(topic),
             "subcategory": data["subcategory"],
             "avg_score": round(avg_score, 1),
             "occurrence": occurrence,
