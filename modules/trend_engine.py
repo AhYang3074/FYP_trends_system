@@ -134,10 +134,9 @@ def calculate_final_scores(aggregated, validation_data=None):
             data.get("tfidf_sim", 0.0),
         )
 
-        final_score = avg_score * occurrence_weight * relevance
+        signal_bonus = TopicProcessor.signal_bonus(topic, data["subcategory"])
 
-        trend_bonus = TopicProcessor.trend_boost(topic)
-        final_score += trend_bonus
+        final_score = avg_score * occurrence_weight * relevance + signal_bonus
 
         validation_bonus = 0.0
         validation_sources = {}

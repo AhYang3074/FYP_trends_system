@@ -10,6 +10,7 @@ class TopicProcessor:
         "website", "tool", "service", "company", "stock",
         "video", "photo", "image", "map", "list", "guide",
         "today", "near me", "login", "sign up",
+        "mobile", "phone", "device", "product", "account",
     }
 
     REPLACEMENTS = {
@@ -29,8 +30,7 @@ class TopicProcessor:
         "se": "software engineering",
         "ds": "data science",
         "os": "operating system",
-        "bnpl": "buy now pay later",
-        # Standalone fragments → full concept (exact match only)
+        # Standalone fragments → full concept
         "intelligence": "artificial intelligence",
         "machine": "machine learning",
         "learning": "machine learning",
@@ -43,43 +43,45 @@ class TopicProcessor:
         "branding": "brand strategy",
         "automation": "business automation",
         "unicorn": "unicorn startup",
+        # Finance merges
+        "earnings": "earnings report",
+        "cryptocurrency": "crypto market",
+        "bitcoin": "crypto market",
+        "stablecoin": "crypto market",
+        "decentralized finance": "crypto market",
+        "defi": "crypto market",
         "federal reserve bank": "federal reserve",
         "federal reserve system": "federal reserve",
+        "central bank": "federal reserve",
+        "monetary policy": "federal reserve",
     }
 
     # L1.5 — too-broad standalone topics (exact match, post-normalize)
     GENERIC_TOPICS = {
-        # Tech
         "technology", "software", "internet", "science",
         "data", "system", "platform", "application",
         "network", "computer", "engineering", "computing",
         "information", "digital", "security", "analysis",
+        "management", "research", "development", "design",
+        "process", "model", "program", "solution",
         "language", "version", "protocol", "architecture",
         "structure", "framework", "method", "technique",
         "concept", "theory", "resource", "device",
-        # Business
-        "management", "research", "development", "design",
-        "process", "model", "program", "solution",
         "strategy", "marketing", "innovation", "funding",
         "operation", "performance", "optimization", "growth",
         "revenue", "profit", "industry", "sector",
         "regulation", "compliance", "governance",
         "leadership", "pitch book",
-        # Finance
-        "payment", "market", "earnings", "finance",
-        "investment", "cryptocurrency", "trading", "banking",
-        "economy", "rate", "policy", "exchange",
-        "valuation", "monetary", "hedge", "equity",
-        "bond", "asset", "portfolio", "capital",
-        "derivative", "commodity", "inflation", "interest",
-        "credit", "loan", "mortgage", "dividend",
-        "fiscal", "wealth", "insurance", "forex",
-        "fund", "index", "yield", "liquidity",
-        # Multi-word static concepts (not trends)
-        "interest rate", "monetary policy", "federal reserve",
-        "hedge fund", "stock market", "central bank",
-        "fiscal policy", "monetary system",
-        "neobank", "recession",
+        "finance", "investment", "trading", "banking",
+        "economy", "asset", "wealth", "bond",
+        "equity", "commodity", "currency",
+        "policy", "rate", "consumer", "fund",
+        "financial market", "stock market", "investment fund",
+        "neobank fintech",
+        "digital payment", "mobile banking",
+        "mobile phone", "mobile device", "phone",
+        "financial technology", "foreign exchange market",
+        "earnings report",
     }
 
     # L1.5 — temporal / seasonal noise (substring match)
@@ -90,15 +92,22 @@ class TopicProcessor:
         "black friday", "cyber monday", "valentine",
     ]
 
-    # Trend-signal words → dynamic topics get a score boost
-    TREND_PATTERNS = [
-        "crash", "surge", "hike", "drop", "rally",
-        "crisis", "boom", "bubble", "plunge", "soar",
-        "breakout", "collapse", "spike", "dip", "price",
-        "forecast", "prediction", "outlook", "warning",
-        "decision", "announcement", "launch", "release",
-        "ban", "hack", "breach", "attack",
-        "disruption", "shortage", "layoff", "bankruptcy",
+    # Single-word topics that are allowed (known products/brands)
+    ALLOW_SINGLE = {
+        # Tech products
+        "chatgpt", "openai", "deepseek", "gemini", "copilot", "claude",
+        "midjourney", "anthropic", "mistral", "perplexity",
+        "kubernetes", "docker", "tensorflow", "pytorch",
+        "nvidia", "shopify", "nasdaq",
+        # Crypto (after merge these become multi-word, but keep as safety)
+        "coinbase", "binance", "solana",
+    }
+
+    # Trend signal words — topics containing these get a scoring bonus
+    TREND_WORDS = [
+        "crash", "surge", "rally", "hike", "cut",
+        "decision", "crisis", "boom", "bubble", "disruption",
+        "breakthrough", "ban", "launch", "shutdown",
     ]
 
     # Display-name overrides for proper casing
@@ -125,7 +134,6 @@ class TopicProcessor:
         "iot": "IoT",
         "5g": "5G",
         "nft": "NFT",
-        "defi": "DeFi",
         "web3": "Web3",
         "midjourney": "Midjourney",
         "copilot": "Copilot",
@@ -135,8 +143,6 @@ class TopicProcessor:
         "mistral": "Mistral",
         "langchain": "LangChain",
         "perplexity": "Perplexity",
-        "bitcoin": "Bitcoin",
-        "ethereum": "Ethereum",
         "solana": "Solana",
         "paypal": "PayPal",
         "coinbase": "Coinbase",
@@ -153,14 +159,18 @@ class TopicProcessor:
         "b2b": "B2B",
         "b2c": "B2C",
         "ecommerce": "eCommerce",
-        "federal reserve": "Federal Reserve",
         "etf": "ETF",
-        "ipo": "IPO",
+        "bnpl": "BNPL",
         "gdp": "GDP",
         "cpi inflation": "CPI Inflation",
+        "ipo": "IPO",
         "s&p 500": "S&P 500",
-        "buy now pay later": "Buy Now Pay Later",
-        "nasdaq": "NASDAQ",
+        "neobank fintech": "Neobank Fintech",
+        "crypto market": "Crypto Market",
+        "digital payment": "Digital Payment",
+        "financial market": "Financial Market",
+        "earnings report": "Earnings Report",
+        "federal reserve": "Federal Reserve",
     }
 
     _DOMAIN_RE = re.compile(r"\.(com|org|net|io|ai|co|gov|edu)\b")
@@ -180,14 +190,40 @@ class TopicProcessor:
     def normalize(name):
         return TopicProcessor.REPLACEMENTS.get(name, name)
 
-    # --- Layer 1.5: Generic / temporal filter (runs on normalized name) ---
+    # --- Layer 1.5: Noise filter (runs on normalized name) ---
     @staticmethod
     def is_noise(name):
         if name in TopicProcessor.GENERIC_TOPICS:
             return True
         if any(t in name for t in TopicProcessor.TEMPORAL_NOISE):
             return True
+        if len(name.split()) <= 1 and name not in TopicProcessor.ALLOW_SINGLE:
+            return True
         return False
+
+    # --- Scoring signals ---
+    @staticmethod
+    def has_trend_signal(name):
+        return any(w in name for w in TopicProcessor.TREND_WORDS)
+
+    MACRO_KEYWORDS = [
+        "federal reserve", "interest rate", "inflation",
+        "recession", "gdp", "fed rate", "cpi",
+    ]
+
+    @staticmethod
+    def signal_bonus(name, subcategory=""):
+        """Extra points for macro/crypto/event signals, penalty for fintech."""
+        bonus = 0
+        if any(k in name for k in TopicProcessor.MACRO_KEYWORDS):
+            bonus += 15
+        if any(w in name for w in TopicProcessor.TREND_WORDS):
+            bonus += 10
+        if "crypto" in name or "bitcoin" in name or "defi" in name:
+            bonus += 10
+        if subcategory == "Fintech":
+            bonus -= 10
+        return bonus
 
     # --- Layer 2: Keyword match score (continuous) ---
     @staticmethod
@@ -215,14 +251,6 @@ class TopicProcessor:
             if any(p in name for p in patterns):
                 return subcat
         return "General"
-
-    # --- Trend dynamism boost ---
-    @staticmethod
-    def trend_boost(name):
-        """Flat +10 bonus for topics with action/event words."""
-        if any(p in name for p in TopicProcessor.TREND_PATTERNS):
-            return 10
-        return 0
 
     # --- Display name (proper casing) ---
     @staticmethod

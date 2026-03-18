@@ -50,7 +50,6 @@ def search():
         "result.html",
         category_name=cat_name,
         results=top_results,
-        total_seeds=len(seeds),
         total_topics=len(results),
     )
 
