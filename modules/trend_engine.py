@@ -10,10 +10,7 @@ from utils.config import (
 )
 
 
-# ── Pipeline ────────────────────────────────────────────────────────────────
 def aggregate_topics(all_raw_data, category_name, seeds):
-    """Collect and tag every topic. Only L1 (clean) and L3 (exclusion) delete.
-    Everything else becomes a continuous score modifier."""
     aggregated = defaultdict(lambda: {
         "scores": [],
         "sources": set(),
@@ -48,7 +45,6 @@ def aggregate_topics(all_raw_data, category_name, seeds):
 
 
 def _ingest(aggregated, raw_name, score, seed_keyword, category_name):
-    """Run L1 → L1.5 → L3, then store the topic. Returns the entry or None."""
     clean_name = TopicProcessor.clean(raw_name)
     if not clean_name:
         return None
@@ -74,7 +70,6 @@ def _ingest(aggregated, raw_name, score, seed_keyword, category_name):
     return entry
 
 
-# ── L4: TF-IDF against full domain vocabulary ──────────────────────────────
 def _attach_tfidf_scores(aggregated, category_name, seeds):
     topic_names = list(aggregated.keys())
     if not topic_names:
@@ -103,7 +98,6 @@ def _attach_tfidf_scores(aggregated, category_name, seeds):
         aggregated[name]["tfidf_sim"] = float(sim_matrix[idx].max())
 
 
-# ── Relevance formula ───────────────────────────────────────────────────────
 def _compute_relevance(keyword_score, tfidf_sim):
     if keyword_score >= 1.0:
         return 1.0
@@ -115,7 +109,6 @@ def _compute_relevance(keyword_score, tfidf_sim):
     return RELEVANCE_FLOOR
 
 
-# ── Final scoring ───────────────────────────────────────────────────────────
 def calculate_final_scores(aggregated, validation_data=None):
     results = []
 
@@ -174,7 +167,6 @@ def calculate_final_scores(aggregated, validation_data=None):
     return results
 
 
-# ── Helpers ─────────────────────────────────────────────────────────────────
 def _score_to_stars(score):
     if score >= 80:
         return 5

@@ -3,7 +3,6 @@ from sklearn.cluster import KMeans
 
 
 def cluster_topics(topic_names, n_clusters=None):
-    """Cluster topics using TF-IDF vectorization + K-Means."""
     if len(topic_names) < 3:
         return {name: 0 for name in topic_names}
 

@@ -1,9 +1,3 @@
-"""Multi-source topic validation.
-
-News validation fuses NewsAPI (weight 0.6) + GNews (weight 0.4).
-Other sources are category-specific (Alpha Vantage, GitHub, StackExchange).
-"""
-
 import requests
 from utils.config import (
     NEWS_API_KEY,
@@ -18,12 +12,7 @@ from utils.config import (
 _TIMEOUT = 5
 
 
-# ── Public API ──────────────────────────────────────────────────────────────
-
 def validate_topics(topic_names, category_name):
-    """Run all validation sources for the given category.
-    Returns {topic: {"bonus": float, "sources": {src: raw_value, ...}}}
-    """
     cat = category_name.lower()
     sources = VALIDATION_SOURCES.get(cat, ["news"])
 
@@ -59,8 +48,6 @@ def validate_topics(topic_names, category_name):
     return result
 
 
-# ── Normalisers ─────────────────────────────────────────────────────────────
-
 def _normalise(raw_value, source, max_bonus):
     if raw_value <= 0:
         return 0.0
@@ -74,10 +61,7 @@ def _normalise(raw_value, source, max_bonus):
     return min(raw_value / ceiling, 1.0) * max_bonus
 
 
-# ── Fused news validator (NewsAPI 0.6 + GNews 0.4) ─────────────────────────
-
 def _news_validate(topics):
-    """Blend NewsAPI and GNews into a single weighted article score."""
     newsapi_data = _newsapi_fetch(topics)
     gnews_data = _gnews_fetch(topics)
 
@@ -134,8 +118,6 @@ def _gnews_fetch(topics):
             pass
     return out
 
-
-# ── Other validators ────────────────────────────────────────────────────────
 
 def _alphavantage_validate(topics):
     if not ALPHA_VANTAGE_KEY:

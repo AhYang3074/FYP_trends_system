@@ -63,9 +63,6 @@ CATEGORY_SEEDS = {
     },
 }
 
-# ---------------------------------------------------------------------------
-# Layer 2: Domain keyword matching  (core → 1.0, related → 0.8, miss → 0.0)
-# ---------------------------------------------------------------------------
 DOMAIN_KEYWORDS = {
     "technology": {
         "core": [
@@ -133,9 +130,6 @@ DOMAIN_KEYWORDS = {
     "all categories": {"core": [], "related": []},
 }
 
-# ---------------------------------------------------------------------------
-# Layer 3: Reusable exclusion building blocks
-# ---------------------------------------------------------------------------
 GEOGRAPHY_EXCLUSIONS = [
     "united states", "usa", "uk", "china", "india", "malaysia",
     "south korea", "north korea", "japan", "singapore",
@@ -199,7 +193,6 @@ GENERIC_NOISE = [
     "religion", "church",
 ]
 
-# Compose per-category exclusion lists from building blocks
 DOMAIN_EXCLUSIONS = {
     "technology": [
         *GEOGRAPHY_EXCLUSIONS,
@@ -240,17 +233,11 @@ DOMAIN_EXCLUSIONS = {
     ],
 }
 
-# ---------------------------------------------------------------------------
-# Scoring parameters
-# ---------------------------------------------------------------------------
 TFIDF_SIMILARITY_THRESHOLD = 0.05
 RELEVANCE_FLOOR = 0.15
 
 RISING_SCORE_DEFAULT = 15
 
-# ---------------------------------------------------------------------------
-# Validation API routing — which sources apply to which category
-# ---------------------------------------------------------------------------
 VALIDATION_SOURCES = {
     "technology": ["news", "github", "stackexchange"],
     "finance":    ["news", "alphavantage"],
@@ -258,7 +245,6 @@ VALIDATION_SOURCES = {
     "all categories": ["news"],
 }
 
-# Max bonus points each source can contribute
 VALIDATION_MAX_BONUS = {
     "news":          5,
     "alphavantage":  5,
@@ -268,10 +254,6 @@ VALIDATION_MAX_BONUS = {
 
 VALIDATION_TOTAL_CAP = 15
 
-# ---------------------------------------------------------------------------
-# Topic → Sub-category inference (keyword patterns per main category)
-# First matching sub-category wins, so order from specific → general.
-# ---------------------------------------------------------------------------
 TOPIC_SUBCATEGORIES = {
     "technology": {
         "Artificial Intelligence": [

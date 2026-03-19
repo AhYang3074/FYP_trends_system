@@ -3,7 +3,6 @@ from utils.config import SERPAPI_KEY, DEFAULT_CATEGORY, DEFAULT_DATE_RANGE
 
 
 def fetch_related_topics(keyword, category=DEFAULT_CATEGORY, date=DEFAULT_DATE_RANGE):
-    """Fetch related topics (Top + Rising) for a single keyword."""
     params = {
         "engine": "google_trends",
         "q": keyword,
@@ -17,7 +16,6 @@ def fetch_related_topics(keyword, category=DEFAULT_CATEGORY, date=DEFAULT_DATE_R
 
 
 def fetch_multi_seed(keywords, category=DEFAULT_CATEGORY, date=DEFAULT_DATE_RANGE):
-    """Fetch related topics for multiple seed keywords and return all results."""
     all_results = []
     for kw in keywords:
         kw = kw.strip()

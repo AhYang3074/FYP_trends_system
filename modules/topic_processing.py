@@ -3,7 +3,6 @@ from utils.config import DOMAIN_KEYWORDS, DOMAIN_EXCLUSIONS, TOPIC_SUBCATEGORIES
 
 
 class TopicProcessor:
-    # L1 — single-word noise (exact match, pre-normalize)
     GENERIC_WORDS = {
         "news", "price", "data", "review", "update", "latest",
         "best", "top", "free", "online", "download", "app",
@@ -14,7 +13,6 @@ class TopicProcessor:
     }
 
     REPLACEMENTS = {
-        # Abbreviation → full form
         "ai": "artificial intelligence",
         "a.i.": "artificial intelligence",
         "artificial intelligence (ai)": "artificial intelligence",
@@ -30,7 +28,6 @@ class TopicProcessor:
         "se": "software engineering",
         "ds": "data science",
         "os": "operating system",
-        # Standalone fragments → full concept
         "intelligence": "artificial intelligence",
         "machine": "machine learning",
         "learning": "machine learning",
@@ -43,7 +40,6 @@ class TopicProcessor:
         "branding": "brand strategy",
         "automation": "business automation",
         "unicorn": "unicorn startup",
-        # Finance merges
         "earnings": "earnings report",
         "cryptocurrency": "crypto market",
         "bitcoin": "crypto market",
@@ -56,7 +52,6 @@ class TopicProcessor:
         "monetary policy": "federal reserve",
     }
 
-    # L1.5 — too-broad standalone topics (exact match, post-normalize)
     GENERIC_TOPICS = {
         "technology", "software", "internet", "science",
         "data", "system", "platform", "application",
@@ -84,7 +79,6 @@ class TopicProcessor:
         "earnings report",
     }
 
-    # L1.5 — temporal / seasonal noise (substring match)
     TEMPORAL_NOISE = [
         "summer", "winter", "spring", "fall",
         "autumn", "holiday", "festival", "event",
@@ -92,25 +86,20 @@ class TopicProcessor:
         "black friday", "cyber monday", "valentine",
     ]
 
-    # Single-word topics that are allowed (known products/brands)
     ALLOW_SINGLE = {
-        # Tech products
         "chatgpt", "openai", "deepseek", "gemini", "copilot", "claude",
         "midjourney", "anthropic", "mistral", "perplexity",
         "kubernetes", "docker", "tensorflow", "pytorch",
         "nvidia", "shopify", "nasdaq",
-        # Crypto (after merge these become multi-word, but keep as safety)
         "coinbase", "binance", "solana",
     }
 
-    # Trend signal words — topics containing these get a scoring bonus
     TREND_WORDS = [
         "crash", "surge", "rally", "hike", "cut",
         "decision", "crisis", "boom", "bubble", "disruption",
         "breakthrough", "ban", "launch", "shutdown",
     ]
 
-    # Display-name overrides for proper casing
     DISPLAY_NAMES = {
         "chatgpt": "ChatGPT",
         "openai": "OpenAI",
@@ -175,7 +164,6 @@ class TopicProcessor:
 
     _DOMAIN_RE = re.compile(r"\.(com|org|net|io|ai|co|gov|edu)\b")
 
-    # --- Layer 1: Basic Cleaning ---
     @staticmethod
     def clean(name):
         name = name.lower().strip()
@@ -190,7 +178,6 @@ class TopicProcessor:
     def normalize(name):
         return TopicProcessor.REPLACEMENTS.get(name, name)
 
-    # --- Layer 1.5: Noise filter (runs on normalized name) ---
     @staticmethod
     def is_noise(name):
         if name in TopicProcessor.GENERIC_TOPICS:
@@ -201,7 +188,6 @@ class TopicProcessor:
             return True
         return False
 
-    # --- Scoring signals ---
     @staticmethod
     def has_trend_signal(name):
         return any(w in name for w in TopicProcessor.TREND_WORDS)
@@ -213,7 +199,6 @@ class TopicProcessor:
 
     @staticmethod
     def signal_bonus(name, subcategory=""):
-        """Extra points for macro/crypto/event signals, penalty for fintech."""
         bonus = 0
         if any(k in name for k in TopicProcessor.MACRO_KEYWORDS):
             bonus += 15
@@ -225,7 +210,6 @@ class TopicProcessor:
             bonus -= 10
         return bonus
 
-    # --- Layer 2: Keyword match score (continuous) ---
     @staticmethod
     def keyword_match_score(name, category_name):
         domain = DOMAIN_KEYWORDS.get(category_name.lower())
@@ -237,13 +221,11 @@ class TopicProcessor:
             return 0.8
         return 0.0
 
-    # --- Layer 3: Exclusion (hard delete) ---
     @staticmethod
     def is_excluded(name, category_name):
         exclusions = DOMAIN_EXCLUSIONS.get(category_name.lower(), [])
         return any(ex in name for ex in exclusions)
 
-    # --- Sub-category inference ---
     @staticmethod
     def infer_subcategory(name, category_name):
         subcats = TOPIC_SUBCATEGORIES.get(category_name.lower(), {})
@@ -252,7 +234,6 @@ class TopicProcessor:
                 return subcat
         return "General"
 
-    # --- Display name (proper casing) ---
     @staticmethod
     def display_name(name):
         if name in TopicProcessor.DISPLAY_NAMES:
