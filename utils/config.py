@@ -61,33 +61,6 @@ CATEGORY_SEEDS = {
             "digital transformation",
         ],
     },
-    "13": {
-        "name": "Health",
-        "seeds": [
-            "public health", "healthcare system", "hospital management",
-            "chronic disease", "cancer research", "diabetes treatment",
-            "heart disease",
-            "biotechnology", "genome sequencing", "gene therapy", "crispr",
-            "vaccine development", "clinical trial", "pharmaceutical industry",
-            "mental health", "depression", "anxiety",
-            "telemedicine", "digital health", "wearable health",
-            "health technology",
-        ],
-    },
-    "174": {
-        "name": "Science",
-        "seeds": [
-            "space exploration", "mars mission", "spacex", "nasa",
-            "quantum physics", "particle physics", "fusion energy",
-            "dark matter",
-            "climate change", "carbon emissions", "renewable energy",
-            "sustainability",
-            "biotechnology", "genetics", "dna sequencing", "neuroscience",
-            "gene editing",
-            "materials science", "graphene", "nanotechnology",
-            "artificial general intelligence", "brain computer interface",
-        ],
-    },
 }
 
 # ---------------------------------------------------------------------------
@@ -155,42 +128,6 @@ DOMAIN_KEYWORDS = {
             "dropshipping", "shopify", "amazon seller",
             "saas", "unicorn", "ipo",
             "inventory management", "supply chain logistics",
-        ],
-    },
-    "health": {
-        "core": [
-            "mental health", "public health", "medical research",
-            "disease treatment", "telemedicine",
-        ],
-        "related": [
-            "fitness", "nutrition", "wellness",
-            "hospital", "doctor", "patient",
-            "therapy", "medicine", "vaccine",
-            "pharma", "clinic", "diagnos", "treatment",
-            "symptom", "biotech", "genome", "cancer",
-            "virus", "surgery", "cardio", "immun",
-            "epidem", "chronic", "drug", "supplement",
-            "health", "medical", "diet",
-            "wearable", "health tech", "clinical trial",
-            "mrna", "crispr", "longevity", "microbiome",
-        ],
-    },
-    "science": {
-        "core": [
-            "quantum physics", "climate change",
-            "space exploration", "biotechnology",
-            "gene editing", "neuroscience",
-        ],
-        "related": [
-            "research", "experiment", "energy",
-            "solar", "nuclear", "genome",
-            "biology", "chemistry", "physics",
-            "renewable", "satellite", "carbon", "emission",
-            "evolution", "ecosystem", "telescope", "particle",
-            "molecule", "fossil", "biodiversity", "astro",
-            "neurosci", "geolog", "planet", "nasa",
-            "crispr", "fusion", "dark matter", "exoplanet",
-            "graphene", "superconductor", "mars", "spacex",
         ],
     },
     "all categories": {"core": [], "related": []},
@@ -297,28 +234,6 @@ DOMAIN_EXCLUSIONS = {
         *NON_SCIENTIFIC,
         *GENERIC_NOISE,
     ],
-    "health": [
-        *GEOGRAPHY_EXCLUSIONS,
-        *EDUCATION_EXCLUSIONS,
-        *ENTERTAINMENT_EXCLUSIONS,
-        *SPORTS_EXCLUSIONS,
-        *LIFESTYLE_EXCLUSIONS,
-        *ENGINEERING_EXCLUSIONS,
-        # HEALTH_NOISE intentionally excluded — those topics are valid here
-        *NON_SCIENTIFIC,
-        *GENERIC_NOISE,
-    ],
-    "science": [
-        *GEOGRAPHY_EXCLUSIONS,
-        *EDUCATION_EXCLUSIONS,
-        *ENTERTAINMENT_EXCLUSIONS,
-        *SPORTS_EXCLUSIONS,
-        *LIFESTYLE_EXCLUSIONS,
-        # ENGINEERING_EXCLUSIONS intentionally excluded — physics/EE overlap
-        *HEALTH_NOISE,
-        *NON_SCIENTIFIC,
-        *GENERIC_NOISE,
-    ],
     "all categories": [
         *NON_SCIENTIFIC,
         *GENERIC_NOISE,
@@ -340,8 +255,6 @@ VALIDATION_SOURCES = {
     "technology": ["news", "github", "stackexchange"],
     "finance":    ["news", "alphavantage"],
     "business":   ["news", "alphavantage"],
-    "health":     ["news"],
-    "science":    ["news", "github", "stackexchange"],
     "all categories": ["news"],
 }
 
@@ -476,58 +389,6 @@ TOPIC_SUBCATEGORIES = {
             "digital transformation", "business automation",
             "ai in business", "remote work",
             "gig economy", "creator economy",
-        ],
-    },
-    "health": {
-        "Mental Health": [
-            "mental health", "anxiety", "depression", "therapy",
-            "counseling", "mindfulness", "stress", "psychology",
-        ],
-        "Medical Research": [
-            "medical research", "clinical trial", "vaccine",
-            "pharma", "drug", "mrna", "crispr", "biotech",
-        ],
-        "Nutrition & Fitness": [
-            "nutrition", "fitness", "diet", "supplement",
-            "vitamin", "protein", "exercise", "workout",
-        ],
-        "Public Health": [
-            "public health", "epidem", "pandemic", "virus",
-            "infection", "outbreak", "cdc", "who",
-        ],
-        "Health Technology": [
-            "telemedicine", "health tech", "wearable",
-            "digital health", "remote monitoring", "ehr",
-        ],
-        "Disease & Treatment": [
-            "cancer", "diabetes", "heart", "surgery",
-            "treatment", "chronic", "immun", "diagnos",
-        ],
-    },
-    "science": {
-        "Space & Astronomy": [
-            "space", "nasa", "spacex", "mars", "satellite",
-            "telescope", "exoplanet", "rocket", "astro",
-        ],
-        "Climate & Environment": [
-            "climate", "carbon", "emission", "renewable",
-            "solar", "sustainability", "environment", "ecosystem",
-        ],
-        "Biotechnology": [
-            "biotech", "gene", "crispr", "genome", "dna",
-            "biology", "molecular", "cell", "protein",
-        ],
-        "Physics": [
-            "quantum", "physics", "particle", "fusion",
-            "dark matter", "superconductor", "graphene",
-        ],
-        "Earth Science": [
-            "geolog", "fossil", "earthquake", "volcano",
-            "ocean", "mineral", "planet",
-        ],
-        "Energy": [
-            "renewable energy", "solar energy", "nuclear",
-            "hydrogen", "battery", "fusion energy",
         ],
     },
     "all categories": {},
