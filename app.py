@@ -20,14 +20,12 @@ def search():
     cat_info = CATEGORY_SEEDS.get(category, CATEGORY_SEEDS[DEFAULT_CATEGORY])
     seeds = cat_info["seeds"]
     cat_name = cat_info["name"]
+    use_filter = request.args.get("filter", "on") != "off"
 
     all_raw = fetch_multi_seed(seeds, category, date)
-
-    aggregated = aggregate_topics(all_raw, cat_name, seeds)
-
+    aggregated = aggregate_topics(all_raw, cat_name, seeds, use_filter=use_filter)
     topic_names = list(aggregated.keys())[:15]
     validation_data = validate_topics(topic_names, cat_name)
-
     results = calculate_final_scores(aggregated, validation_data)
 
     try:
@@ -46,9 +44,11 @@ def search():
 
     top_results = results[:15]
 
+    label = cat_name if use_filter else cat_name + " (Unfiltered)"
+
     return render_template(
         "result.html",
-        category_name=cat_name,
+        category_name=label,
         results=top_results,
         total_topics=len(results),
     )

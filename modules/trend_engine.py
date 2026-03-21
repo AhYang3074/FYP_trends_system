@@ -10,7 +10,7 @@ from utils.config import (
 )
 
 
-def aggregate_topics(all_raw_data, category_name, seeds):
+def aggregate_topics(all_raw_data, category_name, seeds, use_filter=True):
     aggregated = defaultdict(lambda: {
         "scores": [],
         "sources": set(),
@@ -29,30 +29,38 @@ def aggregate_topics(all_raw_data, category_name, seeds):
                 score = int(t["value"])
             except (ValueError, TypeError):
                 continue
-            _ingest(aggregated, raw_name, score, keyword, category_name)
+            _ingest(aggregated, raw_name, score, keyword, category_name, use_filter)
 
         for t in related.get("rising", []):
             raw_name = t["topic"]["title"]
-            entry = _ingest(aggregated, raw_name, None, keyword, category_name)
+            entry = _ingest(aggregated, raw_name, None, keyword, category_name, use_filter)
             if entry is not None:
                 entry["is_rising"] = True
                 if not entry["scores"]:
                     entry["scores"].append(RISING_SCORE_DEFAULT)
 
-    _attach_tfidf_scores(aggregated, category_name, seeds)
+    if use_filter:
+        _attach_tfidf_scores(aggregated, category_name, seeds)
 
     return aggregated
 
 
-def _ingest(aggregated, raw_name, score, seed_keyword, category_name):
-    clean_name = TopicProcessor.clean(raw_name)
-    if not clean_name:
+def _ingest(aggregated, raw_name, score, seed_keyword, category_name, use_filter=True):
+    name = raw_name.lower().strip()
+    if not name or len(name) < 2:
         return None
-    final_name = TopicProcessor.normalize(clean_name)
-    if TopicProcessor.is_noise(final_name):
-        return None
-    if TopicProcessor.is_excluded(final_name, category_name):
-        return None
+
+    if use_filter:
+        clean_name = TopicProcessor.clean(raw_name)
+        if not clean_name:
+            return None
+        final_name = TopicProcessor.normalize(clean_name)
+        if TopicProcessor.is_noise(final_name):
+            return None
+        if TopicProcessor.is_excluded(final_name, category_name):
+            return None
+    else:
+        final_name = name
 
     entry = aggregated[final_name]
 
