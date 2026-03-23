@@ -16,6 +16,7 @@ def fetch_related_topics(keyword, category=DEFAULT_CATEGORY, date=DEFAULT_DATE_R
 
 
 def fetch_multi_seed(keywords, category=DEFAULT_CATEGORY, date=DEFAULT_DATE_RANGE):
+    """One request per seed; `date` is the full window (e.g. today 12-m or today 1-m)."""
     all_results = []
     for kw in keywords:
         kw = kw.strip()

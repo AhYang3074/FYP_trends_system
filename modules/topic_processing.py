@@ -50,7 +50,16 @@ class TopicProcessor:
         "federal reserve system": "federal reserve",
         "central bank": "federal reserve",
         "monetary policy": "federal reserve",
+        "generative artificial intelligence": "artificial intelligence",
+        "large language model": "language model",
     }
+
+    # Substring phrase aliases (after dict lookup) — longer phrases first
+    PHRASE_ALIASES = (
+        ("generative artificial intelligence", "artificial intelligence"),
+        ("large language model", "language model"),
+        ("generative ai", "artificial intelligence"),
+    )
 
     GENERIC_TOPICS = {
         "technology", "software", "internet", "science",
@@ -160,6 +169,8 @@ class TopicProcessor:
         "financial market": "Financial Market",
         "earnings report": "Earnings Report",
         "federal reserve": "Federal Reserve",
+        "language model": "Language Model",
+        "artificial intelligence": "Artificial Intelligence",
     }
 
     _DOMAIN_RE = re.compile(r"\.(com|org|net|io|ai|co|gov|edu)\b")
@@ -176,7 +187,16 @@ class TopicProcessor:
 
     @staticmethod
     def normalize(name):
-        return TopicProcessor.REPLACEMENTS.get(name, name)
+        n = TopicProcessor.REPLACEMENTS.get(name, name)
+        return TopicProcessor._apply_phrase_aliases(n)
+
+    @staticmethod
+    def _apply_phrase_aliases(text):
+        t = text
+        for old, new in TopicProcessor.PHRASE_ALIASES:
+            if old in t:
+                t = t.replace(old, new)
+        return " ".join(t.split())
 
     @staticmethod
     def is_noise(name):
